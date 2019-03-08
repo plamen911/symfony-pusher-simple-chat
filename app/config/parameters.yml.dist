@@ -17,3 +17,9 @@ parameters:
 
     # A secret key that's used to generate certain security-related tokens
     secret: ThisTokenIsNotSoSecretChangeIt
+
+    pusher_app_id: your_pusher_app_id
+    pusher_key: your_pusher_key
+    pusher_secret: your_pusher_secret
+    pusher_cluster: your_pusher_cluster
+    pusher_channel: your_pusher_channel
