@@ -1,0 +1,89 @@
+{% extends "app.html.twig" %}
+
+{% block title %}AppBundle:Chat:show{% endblock %}
+
+{% block body %}
+    <h1>Welcome to the Chat:show page</h1>
+    <div class="row">
+        <div class="col-md-12">
+            <form id="chat-form">
+                <div class="input-group mb-3">
+                    <input type="text" id="message" name="message" class="form-control"
+                           placeholder="Type a message here"
+                           aria-label="Type a message here" aria-describedby="button-addon2">
+                    <div class="input-group-append">
+                        <button type="submit" class="btn btn-secondary" id="button-addon2"><i
+                                    class="far fa-paper-plane"></i> Submit
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <ul id="chat-list" class="list-group"></ul>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="https://js.pusher.com/4.3/pusher.min.js"></script>
+    <script>
+      // Pusher.logToConsole = true;
+      var pusher = new Pusher('{{ pusher_key }}', {
+        cluster: '{{ pusher_cluster }}',
+        forceTLS: true
+      })
+      $(function () {
+        var channel = pusher.subscribe('{{ pusher_channel }}')
+        channel.bind('{{ event_name }}', function (data) {
+          prependChatItem(data)
+        })
+
+        $('#chat-form').on('submit', function (e) {
+          e.preventDefault()
+          var $messageElem = $('#message')
+          var message = $.trim($messageElem.val())
+          if (!message) {
+            toastr.error('Please type a message', 'Грешка!')
+            $messageElem.focus()
+            return
+          }
+          sendChatMessage(message)
+        })
+      })
+
+      function sendChatMessage (message) {
+        $.ajax({
+          type: 'post',
+          url: '/submit',
+          dataType: 'json',
+          data: {message: message},
+          beforeSend: function () {
+            $('input, button', '#chat-form').attr('disabled', 'disabled')
+          }, // End beforeSend
+          success: function (data) {
+            $('#message').val('').focus()
+          }, // End success
+          error: function (err) {
+            console.log(err)
+          }, // End error
+          complete: function () {
+            $('input, button', '#chat-form').removeAttr('disabled')
+          }
+        })
+      }
+
+      function prependChatItem (data) {
+        var message = data.message || ''
+        var send_at = data.send_at || ''
+        var author = data.author || ''
+        $('#chat-list').prepend($('<li class="list-group-item d-flex justify-content-between align-items-center">')
+          .append('<span><small class="text-muted">' + send_at + '</small> ' + message + '</span>')
+          .append($('<span class="badge badge-primary badge-pill">' + author + '</span>'))
+        )
+      }
+    </script>
+{% endblock %}
